@@ -107,6 +107,10 @@ func validateLibraries(cfg *config.Config) error {
 		pathCount = make(map[string]int)
 	)
 	for _, lib := range cfg.Libraries {
+		if strings.HasSuffix(lib.Name, "-preview") {
+			// skip previews in counting for now
+			continue
+		}
 		if lib.Name != "" {
 			nameCount[lib.Name]++
 		}

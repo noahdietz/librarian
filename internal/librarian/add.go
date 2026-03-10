@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"slices"
 	"sort"
 	"strconv"
@@ -113,12 +114,27 @@ func addLibrary(cfg *config.Config, apis ...string) (string, *config.Config, err
 	if exists {
 		return "", nil, fmt.Errorf("%w: %s", errLibraryAlreadyExists, name)
 	}
+	preview := strings.HasSuffix(name, "-preview")
+	trimmedPreview := strings.TrimSuffix(name, "-preview")
 
 	lib := &config.Library{
 		Name:          name,
 		CopyrightYear: strconv.Itoa(time.Now().Year()),
 	}
+	if preview {
+		lib.Output = filepath.Join("preview-packages", trimmedPreview)
+		if cfg.Language == config.LanguagePython {
+			lib.Python = &config.PythonPackage{}
+			lib.Python.OptArgsByAPI = make(map[string][]string)
+		}
+	}
 	for _, a := range apis {
+		if preview {
+			a = strings.TrimPrefix(a, "preview/")
+			if cfg.Language == config.LanguagePython {
+				lib.Python.OptArgsByAPI[a] = []string{fmt.Sprintf("warehouse-package-name=%s", trimmedPreview)}
+			}
+		}
 		lib.APIs = append(lib.APIs, &config.API{
 			Path: a,
 		})

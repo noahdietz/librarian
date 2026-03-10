@@ -38,7 +38,11 @@ const (
 // Generate generates all the given libraries in sequence.
 func Generate(ctx context.Context, config *config.Config, libraries []*config.Library, googleapisDir string) error {
 	for _, library := range libraries {
-		if err := generateLibrary(ctx, config, library, googleapisDir); err != nil {
+		gapisd := googleapisDir
+		if strings.HasSuffix(library.Name, "-preview") {
+			gapisd = filepath.Join(gapisd, "preview")
+		}
+		if err := generateLibrary(ctx, config, library, gapisd); err != nil {
 			return err
 		}
 	}
@@ -119,11 +123,12 @@ func createRepoMetadata(cfg *config.Config, library *config.Library, googleapisD
 	if err != nil {
 		return nil, err
 	}
+	name := strings.TrimSuffix(library.Name, "-preview")
 	repoMetadata := repometadata.FromAPI(cfg, api, library)
 	if packageOptions.MetadataNameOverride != "" {
 		repoMetadata.Name = packageOptions.MetadataNameOverride
 	} else {
-		repoMetadata.Name = library.Name
+		repoMetadata.Name = name
 	}
 	// Use the version of the first-listed API path as the default version,
 	// unless it's overridden.
@@ -132,7 +137,7 @@ func createRepoMetadata(cfg *config.Config, library *config.Library, googleapisD
 		repoMetadata.DefaultVersion = packageOptions.DefaultVersion
 	}
 	repoMetadata.LibraryType = packageOptions.LibraryType
-	repoMetadata.ClientDocumentation = BuildClientDocumentationURI(library.Name, repoMetadata.Name)
+	repoMetadata.ClientDocumentation = BuildClientDocumentationURI(name, repoMetadata.Name)
 	// Even after migration oddities, just a few libraries don't fit into the
 	// normal pattern for client documentation URI (e.g. the documentation is
 	// in cloud.google.com when it would be expected to be in googleapis.dev).
@@ -450,6 +455,10 @@ func DefaultLibraryName(api string) string {
 	if serviceconfig.ExtractVersion(api) != "" {
 		// Strip version suffix (v1, v1beta2, v2alpha, etc.).
 		path = filepath.Dir(api)
+	}
+	if strings.HasPrefix(path, "preview/") {
+		path = strings.TrimPrefix(path, "preview/")
+		path += "/preview"
 	}
 	return strings.ReplaceAll(path, "/", "-")
 }
