@@ -19,6 +19,7 @@ package serviceconfig
 import (
 	_ "embed"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/googleapis/librarian/internal/config"
@@ -177,6 +178,11 @@ func HasAPIPath(path string) bool {
 	_, ok := apisByPath[path]
 	return ok
 
+}
+
+// IsCloudAPI determines if the provided API path is considered a Cloud API.
+func IsCloudAPI(path string) bool {
+	return strings.HasPrefix(path, "google/cloud/")
 }
 
 func unmarshalAPIsOrPanic() []API {

@@ -45,9 +45,12 @@ func IsVeneer(lib *config.Library) bool {
 		return true
 	}
 	if len(lib.APIs) == 0 && lib.Output != "" {
-		// If the derived API path is in sdk.yaml, this is a generated
-		// library whose APIs have not been populated yet, not a veneer.
-		if serviceconfig.HasAPIPath(DeriveAPIPath(lib.Name)) {
+		// If the derived API path is in sdk.yaml or it is a specific version of
+		// a Cloud API (which sometimes do not have explicit sdk.yaml entries),
+		// this is a generated library whose APIs have not been populated yet,
+		// not a veneer.
+		dap := DeriveAPIPath(lib.Name)
+		if serviceconfig.HasAPIPath(dap) || (serviceconfig.IsCloudAPI(dap) && serviceconfig.ExtractVersion(dap) != "") {
 			return false
 		}
 		return true

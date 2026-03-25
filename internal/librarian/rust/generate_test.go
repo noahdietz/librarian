@@ -128,6 +128,14 @@ func TestIsVeneer(t *testing.T) {
 			want: true,
 		},
 		{
+			name: "versioned cloud api without sdk.yaml entry",
+			lib: &config.Library{
+				Name:   "google-cloud-example-v1",
+				Output: "src/generated/cloud/example/v1",
+			},
+			want: false,
+		},
+		{
 			name: "nosvc library without rust modules",
 			lib: &config.Library{
 				Name:   "google-cloud-oslogin-common",

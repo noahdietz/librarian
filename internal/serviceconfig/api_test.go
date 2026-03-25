@@ -60,6 +60,25 @@ func TestHasAPIPath(t *testing.T) {
 	}
 }
 
+func TestIsCloudAPI(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		path string
+		want bool
+	}{
+		{"cloud", "google/cloud/secretmanager", true},
+		{"not cloud", "google/ads/admanager", false},
+		{"empty path", "", false},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			got := IsCloudAPI(test.path)
+			if got != test.want {
+				t.Errorf("IsCloudAPI(%q) = %v, want %v", test.path, got, test.want)
+			}
+		})
+	}
+}
+
 func TestHasRESTNumericEnums(t *testing.T) {
 	for _, test := range []struct {
 		name string
